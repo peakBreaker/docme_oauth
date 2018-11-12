@@ -20,29 +20,33 @@ AMEDIA_ORG_ID = 582844
 def index():
     if not github.authorized:
         return redirect(url_for("github.login"))
+
+    # Get user details
     resp = github.get("/user")
     ret = '<h2>USER DETAILS:</h2><br>'
     if resp.ok:
-        ret += "You are @{login} on GitHub<br>".format(login=resp.json()["login"])
+        ret += "You are %s on GitHub<br>" % resp.json()["login"]
     else:
         ret += 'FAILED AT GETTING USER DATA<br>'
 
-    # GET orgs and check if user is amedia member
-    resp = github.get("/user/orgs")
+    # Get user organizations
     ret += '<h2>ORGANIZATIONS:</h2><br>'
-    if resp.ok:
-        ret += str(resp)
-        ret += "<br><br><pre>%s</pre><br>" % (json.dumps(resp.json(), indent=4))
-        for org in resp.json():
+    resp = github.get("/user/orgs")
+    if not resp.ok:
+        ret += 'FAILED AT GETTING USERORG DATA<br>'
+    else:
+        u_orgs = resp.json()
+        ret += "<pre>%s</pre><br>" % json.dumps(u_orgs, indent=4)
+
+        # Check if user is part of Amedia
+        for org in u_orgs:
             if org.get('id', None) == AMEDIA_ORG_ID:
                 ret += '<h3>--- YOU ARE PART OF AMEDIA ORGANIZATION --- </h3>'
                 break
         else:
             ret += '<h3>--- YOU ARE NOT MEMBER OF AMEDIA --- </h3>'
-    else:
-        ret += 'FAILED AT GETTING USERORG DATA<br>'
 
-    
+    # Finally return the retval
     return ret
 
 
