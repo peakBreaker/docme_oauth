@@ -13,6 +13,8 @@ app.config["GITHUB_OAUTH_CLIENT_SECRET"] = os.environ.get("GITHUB_OAUTH_CLIENT_S
 github_bp = make_github_blueprint(scope='read:org')
 app.register_blueprint(github_bp, url_prefix="/login")
 
+AMEDIA_ORG_ID = 582844
+
 
 @app.route("/")
 def index():
@@ -25,13 +27,22 @@ def index():
     else:
         ret += 'FAILED AT GETTING USER DATA<br>'
 
-    # GET orgs
+    # GET orgs and check if user is amedia member
     resp = github.get("/user/orgs")
     ret += '<h2>ORGANIZATIONS:</h2><br>'
     if resp.ok:
-        ret += "<pre>%s</pre>" % (json.dumps(resp.json(), indent=4))
+        ret += str(resp)
+        ret += "<br><br><pre>%s</pre><br>" % (json.dumps(resp.json(), indent=4))
+        for org in resp.json():
+            if org.get('id', None) == AMEDIA_ORG_ID:
+                ret += '<h3>--- YOU ARE PART OF AMEDIA ORGANIZATION --- </h3>'
+                break
+        else:
+            ret += '<h3>--- YOU ARE NOT MEMBER OF AMEDIA --- </h3>'
     else:
         ret += 'FAILED AT GETTING USERORG DATA<br>'
+
+    
     return ret
 
 
